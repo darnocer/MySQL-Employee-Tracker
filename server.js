@@ -21,3 +21,14 @@ connection.connect(function (err) {
   if (err) throw err;
   start();
 });
+
+function start() {
+  clear();
+  renderGreeting();
+  log("app started!");
+}
+
+// update with something fun
+function renderGreeting() {
+  log("~EMPLOYEE TRACKER~");
+}
