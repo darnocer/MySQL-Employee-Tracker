@@ -25,10 +25,39 @@ connection.connect(function (err) {
 function start() {
   clear();
   renderGreeting();
-  log("app started!");
+  promptUser();
 }
 
 // update with something fun
 function renderGreeting() {
   log("~EMPLOYEE TRACKER~");
+}
+
+function promptUser() {
+  inquirer
+    .prompt({
+      name: "userSelection",
+      type: "list",
+      message: "What would you like to do?",
+      choices: [
+        "View All Employees",
+        "View All Employees By Department",
+        "View All Employees By Manager",
+        "Add Employee",
+        "Remove Employee",
+        "Update Employee Role",
+        "Update Employee Manager",
+      ],
+    })
+    .then((answer) => {
+      switch (answer.userSelection) {
+        case "View All Employees":
+          viewEmployees();
+          break;
+      }
+    });
+}
+
+function viewEmployees() {
+  console.log("HELLO");
 }
