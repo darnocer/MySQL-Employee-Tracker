@@ -1,0 +1,27 @@
+{
+  "name": "MySQL-Employee-Tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darnocer/MySQL-Employee-Tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darnocer/MySQL-Employee-Tracker/issues"
+  },
+  "homepage": "https://github.com/darnocer/MySQL-Employee-Tracker#readme",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "console-clear": "^1.1.1",
+    "console.table": "^0.10.0",
+    "inquirer": "^7.2.0",
+    "mysql": "^2.18.1"
+  }
+}
