@@ -4,6 +4,7 @@ const inquirer = require("inquirer");
 const console_table = require("console.table");
 const chalk = require("chalk");
 const clear = require("console-clear");
+const util = require("util");
 
 const log = console.log;
 
@@ -15,6 +16,9 @@ const connection = mysql.createConnection({
   password: "password",
   database: "employees_DB",
 });
+
+// gives availability to async/await concept
+connection.query = util.promisify(connection.query);
 
 // connects to the mysql server and sql database
 connection.connect(function (err) {
@@ -33,6 +37,8 @@ function renderGreeting() {
   log("~EMPLOYEE TRACKER~");
 }
 
+// do not need switch statements for every case
+// return instead of break
 function promptUser() {
   inquirer
     .prompt({
@@ -109,6 +115,7 @@ function promptUser() {
       switch (answer.userSelection) {
         case "Exit":
           connection.end();
+          // can also use process.exit();
           break;
       }
     });
@@ -118,8 +125,31 @@ function viewEmployees() {
   log("Viewing All Employees");
 }
 
-function viewByDepartment() {
+async function viewByDepartment() {
   log("Viewing By Department");
+  const departments = await connection.query("SELECT * FROM department");
+  // returned as an array of id and names
+  const departmentChoices = departments.map(({ id, name }) => ({
+    name: name,
+    value: id,
+  }));
+  const { departmentId } = await inquirer.prompt([
+    {
+      type: "list",
+      message: "What department would you like to view employees for?",
+      name: "departmentId",
+      choices: departmentChoices,
+    },
+  ]);
+
+  const employees = await connection.query(
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id WHERE department.id = ?;",
+    departmentId
+  );
+
+  log("\n");
+  console.table(employees);
+  promptUser();
 }
 
 // function viewByManager() {
@@ -128,14 +158,28 @@ function viewByDepartment() {
 
 function addEmployee() {
   log("Adding employee");
+  // create prompt
 }
 
 function addRole() {
   log("Adding Role");
 }
 
+// function needs to be asynchronous. Can use asycn/await, .then chaining (returning), .then wrapping
 function addDepartment() {
-  log("Adding Role");
+  log("Adding Department");
+  inquirer
+    .prompt({
+      name: "deptname",
+      message: "What's the name of the department?",
+    })
+    .then((response) => {
+      return connection.query("INSERT INTO department SET ?", response);
+    })
+    .then(() => {
+      console.log("Department added!");
+      promptUser();
+    });
 }
 
 // function removeEmployee() {
