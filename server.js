@@ -377,8 +377,6 @@ async function removeDepartment() {
 }
 
 async function updateEmployee() {
-  log("Updating Employee's Role");
-
   const employees = await connection.query("SELECT * FROM employee");
 
   const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
@@ -420,7 +418,9 @@ async function updateEmployee() {
       ]);
     })
     .then(() => {
-      log(`Role updated!`);
+      log(red("Employee Role Updated!"));
+      log("\n");
+
       mainMenu();
     });
 }
