@@ -6,6 +6,7 @@ const chalk = require("chalk");
 const clear = require("console-clear");
 const util = require("util");
 
+// other variables
 const log = console.log;
 
 // creates the connection information for the sql database
@@ -29,7 +30,7 @@ connection.connect(function (err) {
 function start() {
   clear();
   renderGreeting();
-  promptUser();
+  mainMenu();
 }
 
 // update with something fun
@@ -37,9 +38,7 @@ function renderGreeting() {
   log("~EMPLOYEE TRACKER~");
 }
 
-// do not need switch statements for every case
-// return instead of break
-function promptUser() {
+function mainMenu() {
   inquirer
     .prompt({
       name: "userSelection",
@@ -47,8 +46,8 @@ function promptUser() {
       message: "What would you like to do?",
       choices: [
         "View All Employees",
-        "View All Employees By Department",
-        "View All Employees By Role",
+        "View Employees By Department",
+        "View Employees By Role",
         // "View All Employees By Manager",
         "Add Employee",
         "Add Role",
@@ -66,119 +65,202 @@ function promptUser() {
         case "View All Employees":
           viewEmployees();
           break;
-      }
-      switch (answer.userSelection) {
-        case "View All Employees By Department":
+
+        case "View Employees By Department":
           viewByDepartment();
           break;
-      }
-      // switch (answer.userSelection) {
-      //   case "View All Employees By Manager":
-      //     viewByManager();
-      //     break;
-      // }
-      switch (answer.userSelection) {
+
+        case "View Employees By Role":
+          viewByRole();
+          break;
+
+        //   case "View All Employees By Manager":
+        //     viewByManager();
+        //     break;
         case "Add Employee":
           addEmployee();
           break;
-      }
-      switch (answer.userSelection) {
+
         case "Add Role":
           addRole();
           break;
-      }
-      switch (answer.userSelection) {
+
         case "Add Department":
           addDepartment();
           break;
-      }
-      // switch (answer.userSelection) {
-      //   case "Remove Employee":
-      //     removeEmployee();
-      //     break;
-      // }
-      // switch (answer.userSelection) {
-      //   case "Remove Role":
-      //     removeRole();
-      //     break;
-      // }
-      // switch (answer.userSelection) {
-      //   case "Remove Department":
-      //     removeDepartment();
-      //     break;
-      // }
-      switch (answer.userSelection) {
+
+        //   case "Remove Employee":
+        //     removeEmployee();
+        //     break;
+
+        //   case "Remove Role":
+        //     removeRole();
+        //     break;
+
+        //   case "Remove Department":
+        //     removeDepartment();
+        //     break;
+
         case "Update Employee Role":
           updateEmployee();
           break;
-      }
-      switch (answer.userSelection) {
+
         case "Exit":
           connection.end();
-          // can also use process.exit();
           break;
       }
     });
 }
 
-function viewEmployees() {
+async function viewEmployees() {
   log("Viewing All Employees");
+
+  // const employees = await connection.query("SELECT * FROM employee");
+  const employees = await connection.query(
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id"
+  );
+
+  log("\n");
+  console.table(employees);
+  mainMenu();
 }
 
 async function viewByDepartment() {
-  log("Viewing By Department");
+  log("Viewing Employees By Department");
+
   const departments = await connection.query("SELECT * FROM department");
-  // returned as an array of id and names
+
   const departmentChoices = departments.map(({ id, name }) => ({
     name: name,
     value: id,
   }));
-  const { departmentId } = await inquirer.prompt([
+
+  const { userDepartmentId } = await inquirer.prompt([
     {
       type: "list",
       message: "What department would you like to view employees for?",
-      name: "departmentId",
+      name: "userDepartmentId",
       choices: departmentChoices,
     },
   ]);
 
   const employees = await connection.query(
     "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id WHERE department.id = ?;",
-    departmentId
+    userDepartmentId
   );
 
   log("\n");
   console.table(employees);
-  promptUser();
+  mainMenu();
+}
+
+async function viewByRole() {
+  log("Viewing Employees By Role");
+
+  const roles = await connection.query("SELECT * FROM role");
+
+  const roleChoices = roles.map(({ id, title }) => ({
+    name: title,
+    value: id,
+  }));
+
+  const { userRoleId } = await inquirer.prompt([
+    {
+      type: "list",
+      message: "What role would you like to view employees for?",
+      name: "userRoleId",
+      choices: roleChoices,
+    },
+  ]);
+
+  const employees = await connection.query(
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id WHERE role.id = ?;",
+    userRoleId
+  );
+
+  log("\n");
+  console.table(employees);
+  mainMenu();
 }
 
 // function viewByManager() {
 //   log("Viewing By Manager");
 // }
 
-function addEmployee() {
+async function addEmployee() {
   log("Adding employee");
-  // create prompt
+
+  const roles = await connection.query("SELECT * FROM role");
+
+  const roleChoices = roles.map(({ id, title }) => ({
+    name: title,
+    value: id,
+  }));
+
+  inquirer
+    .prompt([
+      {
+        name: "first_name",
+        message: "What's the employee's first name?",
+      },
+      {
+        name: "last_name",
+        message: "What's the employee's last name?",
+      },
+      {
+        type: "list",
+        message: "What is the employee's role?",
+        name: "role_id",
+        choices: roleChoices,
+      },
+    ])
+    .then((answer) => {
+      return connection.query("INSERT INTO employee SET ?", answer);
+    })
+    .then(() => {
+      return connection.query(
+        "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id"
+      );
+    })
+    .then((employees) => {
+      console.log("Employee added!");
+      log("\n");
+      console.table(employees);
+      mainMenu();
+    });
 }
 
 function addRole() {
   log("Adding Role");
-}
 
-// function needs to be asynchronous. Can use asycn/await, .then chaining (returning), .then wrapping
-function addDepartment() {
-  log("Adding Department");
   inquirer
     .prompt({
-      name: "deptname",
-      message: "What's the name of the department?",
+      name: "title",
+      message: "What's the name of the role you'd like to add?",
     })
-    .then((response) => {
-      return connection.query("INSERT INTO department SET ?", response);
+    .then((answer) => {
+      return connection.query("INSERT INTO role SET ?", answer);
+    })
+    .then(() => {
+      console.log("Role added!");
+      mainMenu();
+    });
+}
+
+function addDepartment() {
+  log("Adding Department");
+
+  inquirer
+    .prompt({
+      name: "name",
+      message: "What's the name of the department you'd like to add?",
+    })
+    .then((answer) => {
+      return connection.query("INSERT INTO department SET ?", answer);
     })
     .then(() => {
       console.log("Department added!");
-      promptUser();
+      mainMenu();
     });
 }
 
@@ -195,5 +277,5 @@ function addDepartment() {
 // }
 
 function updateEmployee() {
-  log("Updating Employee");
+  log("Updating Employee's Role");
 }

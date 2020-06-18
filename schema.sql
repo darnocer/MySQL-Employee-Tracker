@@ -34,7 +34,7 @@ CREATE TABLE employee
     (
       id INT NOT NULL
       AUTO_INCREMENT,
-  name VARCHAR
+  department_name VARCHAR
       (30),
   PRIMARY KEY
       (id)
