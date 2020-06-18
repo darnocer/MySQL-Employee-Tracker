@@ -475,8 +475,58 @@ async function updateEmployeeRole() {
       console.table(employees);
       mainMenu();
     });
+}
 
-  function updateEmployeeManager() {
-    log("Updating Employee Manager");
-  }
+async function updateEmployeeManager() {
+  const employees = await connection.query("SELECT * FROM employee");
+
+  const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
+    name: first_name + " " + last_name,
+    value: id,
+  }));
+
+  const managers = await connection.query("SELECT * FROM employee");
+
+  const managerChoices = managers.map(({ id, first_name, last_name }) => ({
+    name: first_name.concat(" ", last_name),
+    value: id,
+  }));
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "Which employee would you like to update?",
+        name: "userEmployee",
+        choices: employeeChoices,
+      },
+      {
+        type: "list",
+        message:
+          "Which role would you like to update the selected employee to?",
+        name: "newManagerId",
+        choices: managerChoices,
+      },
+    ])
+    .then((answer) => {
+      return connection.query("UPDATE employee SET ? WHERE ?", [
+        {
+          manager_id: answer.newManagerId,
+        },
+        {
+          id: answer.userEmployee,
+        },
+      ]);
+    })
+    .then(() => {
+      return connection.query(
+        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
+      );
+    })
+    .then((employees) => {
+      log(red("Employee Manager Updated!"));
+      log("\n");
+      console.table(employees);
+      mainMenu();
+    });
 }
