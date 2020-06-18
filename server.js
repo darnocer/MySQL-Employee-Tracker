@@ -10,7 +10,6 @@ const util = require("util");
 const log = console.log;
 
 // chalk
-const bgRed = chalk.bgRed;
 const red = chalk.red;
 const inverse = chalk.inverse;
 
@@ -79,9 +78,9 @@ function mainMenu() {
           viewByRole();
           break;
 
-        //   case "View All Employees By Manager":
-        //     viewByManager();
-        //     break;
+        case "View All Employees By Manager":
+          viewByManager();
+          break;
 
         case "Add Employee":
           addEmployee();
@@ -119,8 +118,9 @@ function mainMenu() {
 }
 
 async function viewEmployees() {
+  // make this employees constructor function
   const employees = await connection.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id"
+    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
   );
 
   log("\n");
@@ -130,12 +130,10 @@ async function viewEmployees() {
 }
 
 async function viewByDepartment() {
-  log("Viewing Employees By Department");
-
   const departments = await connection.query("SELECT * FROM department");
 
-  const departmentChoices = departments.map(({ id, name }) => ({
-    name: name,
+  const departmentChoices = departments.map(({ id, department_name }) => ({
+    name: department_name,
     value: id,
   }));
 
@@ -148,8 +146,9 @@ async function viewByDepartment() {
     },
   ]);
 
+  // make this employees constructor function
   const employees = await connection.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id WHERE department.id = ?;",
+    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id WHERE department.id = ?;',
     userDepartmentId
   );
 
@@ -177,8 +176,9 @@ async function viewByRole() {
     },
   ]);
 
+  // make this employees constructor function
   const employees = await connection.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id WHERE role.id = ?;",
+    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id WHERE role.id = ?;',
     userRoleId
   );
 
@@ -187,17 +187,22 @@ async function viewByRole() {
   mainMenu();
 }
 
-// function viewByManager() {
-//   log("Viewing By Manager");
-// }
+function viewByManager() {
+  log("Viewing By Manager");
+}
 
 async function addEmployee() {
-  log("Adding employee");
-
   const roles = await connection.query("SELECT * FROM role");
 
   const roleChoices = roles.map(({ id, title }) => ({
     name: title,
+    value: id,
+  }));
+
+  const managers = await connection.query("SELECT * FROM employee");
+
+  const managerChoices = managers.map(({ id, first_name, last_name }) => ({
+    name: first_name.concat(" ", last_name),
     value: id,
   }));
 
@@ -217,53 +222,69 @@ async function addEmployee() {
         name: "role_id",
         choices: roleChoices,
       },
+      {
+        type: "list",
+        message: "Who is the employee's manager?",
+        name: "manager_id",
+        choices: managerChoices,
+      },
     ])
     .then((answer) => {
       return connection.query("INSERT INTO employee SET ?", answer);
     })
     .then(() => {
+      //make this employees constructor function
       return connection.query(
-        "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id"
+        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
       );
     })
     .then((employees) => {
-      console.log("Employee added!");
+      log(red("Employee added!"));
       log("\n");
+      log(inverse("All Employees"));
       console.table(employees);
       mainMenu();
     });
 }
 
 function addRole() {
-  log("Adding Role");
-
   inquirer
     .prompt({
       name: "title",
       message: "What's the name of the role you'd like to add?",
     })
-    .then((answer) => {
-      return connection.query("INSERT INTO role SET ?", answer);
+    .then((role) => {
+      return connection.query("INSERT INTO role SET ?", role);
     })
     .then(() => {
-      console.log("Role added!");
+      return connection.query("SELECT * FROM role");
+    })
+    .then((roles) => {
+      log(red("Role added!"));
+      log("\n");
+      log(inverse("All Roles"));
+      console.table(roles);
       mainMenu();
     });
 }
 
 function addDepartment() {
-  log("Adding Department");
-
   inquirer
     .prompt({
-      name: "name",
+      name: "department_name",
       message: "What's the name of the department you'd like to add?",
     })
-    .then((answer) => {
-      return connection.query("INSERT INTO department SET ?", answer);
+    .then((department) => {
+      return connection.query("INSERT INTO department SET ?", department);
     })
     .then(() => {
-      console.log("Department added!");
+      return connection.query("SELECT * FROM department");
+    })
+    .then((departments) => {
+      log(red("Department added!"));
+      log("\n");
+      log(inverse("All Departments"));
+      console.table(departments);
       mainMenu();
     });
 }
@@ -292,13 +313,13 @@ async function removeEmployee() {
     })
 
     .then(() => {
-      log(red("Employee deleted!"));
-
+      // constructor function
       return connection.query(
-        "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;"
+        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
       );
     })
     .then((employees) => {
+      log(red("Employee deleted!"));
       log("\n");
       log(inverse("All Employees"));
       console.table(employees);
@@ -345,8 +366,8 @@ async function removeRole() {
 async function removeDepartment() {
   const departments = await connection.query("SELECT * FROM department");
 
-  const departmentChoices = departments.map(({ id, name }) => ({
-    name: name,
+  const departmentChoices = departments.map(({ id, department_name }) => ({
+    name: department_name,
     value: id,
   }));
 
@@ -361,12 +382,12 @@ async function removeDepartment() {
     ])
 
     .then(({ userDeptId }) => {
-      log(red("Department deleted!"));
       return connection.query("DELETE FROM department WHERE ?", {
         id: userDeptId,
       });
     })
     .then(() => {
+      log(red("Department deleted!"));
       log("\n");
       log(inverse("All Departments"));
       console.table(departments);
@@ -416,9 +437,14 @@ async function updateEmployee() {
       ]);
     })
     .then(() => {
+      return connection.query(
+        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
+      );
+    })
+    .then((employees) => {
       log(red("Employee Role Updated!"));
       log("\n");
-
+      console.table(employees);
       mainMenu();
     });
 }
