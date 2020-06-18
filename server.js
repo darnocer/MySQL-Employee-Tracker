@@ -8,6 +8,8 @@ const util = require("util");
 
 // other variables
 const log = console.log;
+const employeesSQL =
+  'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id';
 
 // chalk
 const red = chalk.red;
@@ -39,7 +41,12 @@ function start() {
 
 // update with something fun
 function renderGreeting() {
-  log("~EMPLOYEE TRACKER~");
+  log(String.raw`
+ 
+
+  ░█▀▀▀ █▀▄▀█ █▀▀█ █── █▀▀█ █──█ █▀▀ █▀▀ 　 ▀▀█▀▀ █▀▀█ █▀▀█ █▀▀ █─█ █▀▀ █▀▀█ 
+  ░█▀▀▀ █─▀─█ █──█ █── █──█ █▄▄█ █▀▀ █▀▀ 　 ─░█── █▄▄▀ █▄▄█ █── █▀▄ █▀▀ █▄▄▀ 
+  ░█▄▄▄ ▀───▀ █▀▀▀ ▀▀▀ ▀▀▀▀ ▄▄▄█ ▀▀▀ ▀▀▀ 　 ─░█── ▀─▀▀ ▀──▀ ▀▀▀ ▀─▀ ▀▀▀ ▀─▀▀`);
 }
 
 function mainMenu() {
@@ -122,10 +129,7 @@ function mainMenu() {
 }
 
 async function viewEmployees() {
-  // make this employees constructor function
-  const employees = await connection.query(
-    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
-  );
+  const employees = await connection.query(employeesSQL + ";");
 
   log("\n");
   log(inverse("Viewing All Employees"));
@@ -150,9 +154,8 @@ async function viewByDepartment() {
     },
   ]);
 
-  // make this employees constructor function
   const employees = await connection.query(
-    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id WHERE department.id = ?;',
+    employeesSQL + " WHERE department.id = ?;",
     userDepartmentId
   );
 
@@ -180,9 +183,8 @@ async function viewByRole() {
     },
   ]);
 
-  // make this employees constructor function
   const employees = await connection.query(
-    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id WHERE role.id = ?;',
+    employeesSQL + " WHERE role.id = ?;",
     userRoleId
   );
 
@@ -210,7 +212,7 @@ async function viewByManager() {
 
   // make this employees constructor function
   const employees = await connection.query(
-    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id WHERE manager.id = ?;',
+    employeesSQL + " WHERE manager.id = ?;",
     userManagerId
   );
 
@@ -261,10 +263,7 @@ async function addEmployee() {
       return connection.query("INSERT INTO employee SET ?", answer);
     })
     .then(() => {
-      //make this employees constructor function
-      return connection.query(
-        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
-      );
+      return connection.query(employeesSQL + ";");
     })
     .then((employees) => {
       log(red("Employee added!"));
@@ -277,10 +276,12 @@ async function addEmployee() {
 
 function addRole() {
   inquirer
-    .prompt({
-      name: "title",
-      message: "What's the name of the role you'd like to add?",
-    })
+    .prompt([
+      {
+        name: "title",
+        message: "What's the name of the role you'd like to add?",
+      },
+    ])
     .then((role) => {
       return connection.query("INSERT INTO role SET ?", role);
     })
@@ -342,9 +343,7 @@ async function removeEmployee() {
 
     .then(() => {
       // constructor function
-      return connection.query(
-        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
-      );
+      return connection.query(employeesSQL + ";");
     })
     .then((employees) => {
       log(red("Employee deleted!"));
@@ -465,9 +464,7 @@ async function updateEmployeeRole() {
       ]);
     })
     .then(() => {
-      return connection.query(
-        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
-      );
+      return connection.query(employeesSQL + ";");
     })
     .then((employees) => {
       log(red("Employee Role Updated!"));
@@ -519,9 +516,7 @@ async function updateEmployeeManager() {
       ]);
     })
     .then(() => {
-      return connection.query(
-        'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id;'
-      );
+      return connection.query(employeesSQL + ";");
     })
     .then((employees) => {
       log(red("Employee Manager Updated!"));
