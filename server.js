@@ -276,6 +276,51 @@ function addDepartment() {
 //   log("Removing Department");
 // }
 
-function updateEmployee() {
+async function updateEmployee() {
   log("Updating Employee's Role");
+
+  const employees = await connection.query("SELECT * FROM employee");
+
+  const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
+    name: first_name + " " + last_name,
+    value: id,
+  }));
+
+  const roles = await connection.query("SELECT * FROM role");
+
+  const roleChoices = roles.map(({ id, title }) => ({
+    name: title,
+    value: id,
+  }));
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "Which employee would you like to update?",
+        name: "userEmployee",
+        choices: employeeChoices,
+      },
+      {
+        type: "list",
+        message:
+          "Which role would you like to update the selected employee to?",
+        name: "newRoleId",
+        choices: roleChoices,
+      },
+    ])
+    .then((answer) => {
+      return connection.query("UPDATE employee SET ? WHERE ?", [
+        {
+          role_id: answer.newRoleId,
+        },
+        {
+          id: answer.userEmployee,
+        },
+      ]);
+    })
+    .then(() => {
+      log(`Role updated!`);
+      mainMenu();
+    });
 }
