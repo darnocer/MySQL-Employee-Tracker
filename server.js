@@ -119,14 +119,12 @@ function mainMenu() {
 }
 
 async function viewEmployees() {
-  log("Viewing All Employees");
-
-  // const employees = await connection.query("SELECT * FROM employee");
   const employees = await connection.query(
     "SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id"
   );
 
   log("\n");
+  log(inverse("Viewing All Employees"));
   console.table(employees);
   mainMenu();
 }
