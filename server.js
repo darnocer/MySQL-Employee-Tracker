@@ -11,7 +11,8 @@ const log = console.log;
 
 // chalk
 const bgRed = chalk.bgRed;
-const bgRed = chalk.red;
+const red = chalk.red;
+const inverse = chalk.inverse;
 
 // creates the connection information for the sql database
 const connection = mysql.createConnection({
@@ -270,8 +271,6 @@ function addDepartment() {
 }
 
 async function removeEmployee() {
-  log(bgRed("Remove Employee"));
-
   const employees = await connection.query("SELECT * FROM employee");
 
   const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
@@ -295,7 +294,7 @@ async function removeEmployee() {
     })
 
     .then(() => {
-      log("Employee deleted!");
+      log(red("Employee deleted!"));
 
       return connection.query(
         "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;"
@@ -303,6 +302,7 @@ async function removeEmployee() {
     })
     .then((employees) => {
       log("\n");
+      log(inverse("All Employees"));
       console.table(employees);
 
       mainMenu();
@@ -310,8 +310,6 @@ async function removeEmployee() {
 }
 
 async function removeRole() {
-  log("Removing Role");
-
   const roles = await connection.query("SELECT * FROM role");
 
   const roleChoices = roles.map(({ id, title }) => ({
@@ -323,27 +321,30 @@ async function removeRole() {
     .prompt([
       {
         type: "list",
-        message: "What role would you like to remove?",
+        message: "Which role would you like to remove?",
         name: "userRoleId",
         choices: roleChoices,
       },
     ])
 
     .then(({ userRoleId }) => {
-      log("Role deleted!");
       return connection.query("DELETE FROM role WHERE ?", {
         id: userRoleId,
       });
     })
     .then(() => {
-      log("Role deleted!");
+      log(red("Role deleted!"));
+      return connection.query("SELECT * FROM role");
+    })
+    .then((roles) => {
+      log("\n");
+      log(inverse("All Roles"));
+      console.table(roles);
       mainMenu();
     });
 }
 
 async function removeDepartment() {
-  log("Removing Department");
-
   const departments = await connection.query("SELECT * FROM department");
 
   const departmentChoices = departments.map(({ id, name }) => ({
@@ -362,13 +363,15 @@ async function removeDepartment() {
     ])
 
     .then(({ userDeptId }) => {
-      log("Department deleted!");
+      log(red("Department deleted!"));
       return connection.query("DELETE FROM department WHERE ?", {
         id: userDeptId,
       });
     })
     .then(() => {
-      log("Department deleted!");
+      log("\n");
+      log(inverse("All Departments"));
+      console.table(departments);
       mainMenu();
     });
 }
