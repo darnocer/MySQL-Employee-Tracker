@@ -9,6 +9,10 @@ const util = require("util");
 // other variables
 const log = console.log;
 
+// chalk
+const bgRed = chalk.bgRed;
+const bgRed = chalk.red;
+
 // creates the connection information for the sql database
 const connection = mysql.createConnection({
   host: "localhost",
@@ -52,9 +56,9 @@ function mainMenu() {
         "Add Employee",
         "Add Role",
         "Add Department",
-        // "Remove Employee",
-        // "Remove Department",
-        // "Remove Role",
+        "Remove Employee",
+        "Remove Department",
+        "Remove Role",
         "Update Employee Role",
         // "Update Employee Manager",
         "Exit",
@@ -77,6 +81,7 @@ function mainMenu() {
         //   case "View All Employees By Manager":
         //     viewByManager();
         //     break;
+
         case "Add Employee":
           addEmployee();
           break;
@@ -89,17 +94,17 @@ function mainMenu() {
           addDepartment();
           break;
 
-        //   case "Remove Employee":
-        //     removeEmployee();
-        //     break;
+        case "Remove Employee":
+          removeEmployee();
+          break;
 
-        //   case "Remove Role":
-        //     removeRole();
-        //     break;
+        case "Remove Role":
+          removeRole();
+          break;
 
-        //   case "Remove Department":
-        //     removeDepartment();
-        //     break;
+        case "Remove Department":
+          removeDepartment();
+          break;
 
         case "Update Employee Role":
           updateEmployee();
@@ -264,17 +269,109 @@ function addDepartment() {
     });
 }
 
-// function removeEmployee() {
-//   log("Removing Employee");
-// }
+async function removeEmployee() {
+  log(bgRed("Remove Employee"));
 
-// function removeRole() {
-//   log("Removing Role");
-// }
+  const employees = await connection.query("SELECT * FROM employee");
 
-// function removeDepartment() {
-//   log("Removing Department");
-// }
+  const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
+    name: first_name + " " + last_name,
+    value: id,
+  }));
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "Which employee would you like to remove?",
+        name: "userEmployee",
+        choices: employeeChoices,
+      },
+    ])
+    .then(({ userEmployee }) => {
+      return connection.query("DELETE FROM employee WHERE ?", {
+        id: userEmployee,
+      });
+    })
+
+    .then(() => {
+      log("Employee deleted!");
+
+      return connection.query(
+        "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;"
+      );
+    })
+    .then((employees) => {
+      log("\n");
+      console.table(employees);
+
+      mainMenu();
+    });
+}
+
+async function removeRole() {
+  log("Removing Role");
+
+  const roles = await connection.query("SELECT * FROM role");
+
+  const roleChoices = roles.map(({ id, title }) => ({
+    name: title,
+    value: id,
+  }));
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "What role would you like to remove?",
+        name: "userRoleId",
+        choices: roleChoices,
+      },
+    ])
+
+    .then(({ userRoleId }) => {
+      log("Role deleted!");
+      return connection.query("DELETE FROM role WHERE ?", {
+        id: userRoleId,
+      });
+    })
+    .then(() => {
+      log("Role deleted!");
+      mainMenu();
+    });
+}
+
+async function removeDepartment() {
+  log("Removing Department");
+
+  const departments = await connection.query("SELECT * FROM department");
+
+  const departmentChoices = departments.map(({ id, name }) => ({
+    name: name,
+    value: id,
+  }));
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "What department would you like to remove?",
+        name: "userDeptId",
+        choices: departmentChoices,
+      },
+    ])
+
+    .then(({ userDeptId }) => {
+      log("Department deleted!");
+      return connection.query("DELETE FROM department WHERE ?", {
+        id: userDeptId,
+      });
+    })
+    .then(() => {
+      log("Department deleted!");
+      mainMenu();
+    });
+}
 
 async function updateEmployee() {
   log("Updating Employee's Role");
