@@ -50,9 +50,9 @@ function mainMenu() {
       message: "What would you like to do?",
       choices: [
         "View All Employees",
-        "View Employees By Department",
-        "View Employees By Role",
-        // "View All Employees By Manager",
+        "View By Department",
+        "View By Role",
+        "View By Manager",
         "Add Employee",
         "Add Role",
         "Add Department",
@@ -60,7 +60,7 @@ function mainMenu() {
         "Remove Department",
         "Remove Role",
         "Update Employee Role",
-        // "Update Employee Manager",
+        "Update Employee Manager",
         "Exit",
       ],
     })
@@ -70,15 +70,15 @@ function mainMenu() {
           viewEmployees();
           break;
 
-        case "View Employees By Department":
+        case "View By Department":
           viewByDepartment();
           break;
 
-        case "View Employees By Role":
+        case "View By Role":
           viewByRole();
           break;
 
-        case "View All Employees By Manager":
+        case "View By Manager":
           viewByManager();
           break;
 
@@ -107,10 +107,14 @@ function mainMenu() {
           break;
 
         case "Update Employee Role":
-          updateEmployee();
+          updateEmployeeRole();
           break;
 
-        case "Exit":
+        case "Update Employee Manager":
+          updateEmployeeManager();
+          break;
+
+        default:
           connection.end();
           break;
       }
@@ -187,8 +191,32 @@ async function viewByRole() {
   mainMenu();
 }
 
-function viewByManager() {
-  log("Viewing By Manager");
+async function viewByManager() {
+  const managers = await connection.query("SELECT * FROM employee");
+
+  const managerChoices = managers.map(({ id, first_name, last_name }) => ({
+    name: first_name.concat(" ", last_name),
+    value: id,
+  }));
+
+  const { userManagerId } = await inquirer.prompt([
+    {
+      type: "list",
+      message: "Which manager would you like to view employees for?",
+      name: "userManagerId",
+      choices: managerChoices,
+    },
+  ]);
+
+  // make this employees constructor function
+  const employees = await connection.query(
+    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, concat(manager.first_name," ",manager.last_name) as manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as manager on employee.manager_id = manager.id WHERE manager.id = ?;',
+    userManagerId
+  );
+
+  log("\n");
+  console.table(employees);
+  mainMenu();
 }
 
 async function addEmployee() {
@@ -395,7 +423,7 @@ async function removeDepartment() {
     });
 }
 
-async function updateEmployee() {
+async function updateEmployeeRole() {
   const employees = await connection.query("SELECT * FROM employee");
 
   const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
@@ -447,4 +475,8 @@ async function updateEmployee() {
       console.table(employees);
       mainMenu();
     });
+
+  function updateEmployeeManager() {
+    log("Updating Employee Manager");
+  }
 }
