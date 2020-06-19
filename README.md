@@ -8,6 +8,8 @@
 
 CMS for employee management utilizing node and MySQL.
 
+![demo](assets/demo.gif)
+
 ## Table of Contents
 
 - [Installation](#installation)
@@ -55,21 +57,27 @@ After installation, select which action you'd like to take from the prompt. You 
 
 ## Credits
 
-- [Font Awesome](https://fontawesome.com/)
+- [MySQL](https://www.npmjs.com/package/mysql)
 
 - [Inquirer](https://www.npmjs.com/package/inquirer)
 
-- [Font Awesome](https://fontawesome.com/)
+- [console.table](https://www.npmjs.com/package/console.table)
 
-- [Font Awesome](https://fontawesome.com/)
+- [Chalk](https://www.npmjs.com/package/chalk)
 
-- [Font Awesome](https://fontawesome.com/)
+- My tutor who helped me understand how to write asynchrounous functions!
 
-- [Font Awesome](https://fontawesome.com/)
+## Future Enhancements
+
+- Show Department Name instead of only ID in the table after adding a new role
+- Update informational logs (eg. "Viewing Employees for {selected department}")
+- Refactor to use classes/constructors
+- Refactor for asynchronous consistency (convert .then chains to async/await)
+- If a selected table is blank, display a message rather than a blank table
 
 ## Tests
 
-n/a
+Coming Soon
 
 ## Questions?
 
