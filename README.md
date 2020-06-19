@@ -1,6 +1,6 @@
 # Employee Tracker
 
-![last commit](https://img.shields.io/github/last-commit/darnocer/https://github.com/darnocer/MySQL-Employee-Tracker?style=flat-square) ![license badge](https://img.shields.io/github/license/darnocer/https://github.com/darnocer/MySQL-Employee-Tracker?style=flat-square)
+![last commit](https://img.shields.io/github/last-commit/darnocer/MySQL-Employee-Tracker?style=flat-square) ![license badge](https://img.shields.io/github/license/darnocer/MySQL-Employee-Tracker?style=flat-square)
 
 ### URL: https://darnocer.github.io/MySQL-Employee-Tracker/
 
