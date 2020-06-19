@@ -74,6 +74,8 @@ After installation, select which action you'd like to take from the prompt. You 
 - Refactor to use classes/constructors
 - Refactor for asynchronous consistency (convert .then chains to async/await)
 - If a selected table is blank, display a message rather than a blank table
+- Add confirmations for deletions/additions/updates
+- Add validation to free text prompts
 
 ## Tests
 
