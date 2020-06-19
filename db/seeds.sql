@@ -1,7 +1,7 @@
 USE employees_DB;
 
 INSERT INTO department
-    (name)
+    (department_name)
 VALUES
     ("Management"),
     ("Engineering"),
@@ -18,9 +18,9 @@ VALUES
     ("Junior Engineer", 75000, 2),
     ("UX Director", 70000, 3),
     ("Chief Quality Officer", 80000, 1),
-    ("Software Tester", 55000, 3);
+    ("Software Tester", 55000, 3),
     ("Sales Lead", 75000, 4),
-    ("Support Specialist", 65000, 5),
+    ("Support Specialist", 65000, 5);
 
 
 INSERT INTO employee

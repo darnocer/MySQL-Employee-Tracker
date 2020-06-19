@@ -47,6 +47,7 @@ function renderGreeting() {
   ░█▀▀▀ █▀▄▀█ █▀▀█ █── █▀▀█ █──█ █▀▀ █▀▀ 　 ▀▀█▀▀ █▀▀█ █▀▀█ █▀▀ █─█ █▀▀ █▀▀█ 
   ░█▀▀▀ █─▀─█ █──█ █── █──█ █▄▄█ █▀▀ █▀▀ 　 ─░█── █▄▄▀ █▄▄█ █── █▀▄ █▀▀ █▄▄▀ 
   ░█▄▄▄ ▀───▀ █▀▀▀ ▀▀▀ ▀▀▀▀ ▄▄▄█ ▀▀▀ ▀▀▀ 　 ─░█── ▀─▀▀ ▀──▀ ▀▀▀ ▀─▀ ▀▀▀ ▀─▀▀`);
+  log("\n");
 }
 
 function mainMenu() {
@@ -129,6 +130,7 @@ function mainMenu() {
 }
 
 async function viewEmployees() {
+  clear();
   const employees = await connection.query(employeesSQL + ";");
 
   log("\n");
@@ -138,6 +140,7 @@ async function viewEmployees() {
 }
 
 async function viewByDepartment() {
+  clear();
   const departments = await connection.query("SELECT * FROM department");
 
   const departmentChoices = departments.map(({ id, department_name }) => ({
@@ -165,6 +168,7 @@ async function viewByDepartment() {
 }
 
 async function viewByRole() {
+  clear();
   log("Viewing Employees By Role");
 
   const roles = await connection.query("SELECT * FROM role");
@@ -194,6 +198,7 @@ async function viewByRole() {
 }
 
 async function viewByManager() {
+  clear();
   const managers = await connection.query("SELECT * FROM employee");
 
   const managerChoices = managers.map(({ id, first_name, last_name }) => ({
@@ -222,6 +227,7 @@ async function viewByManager() {
 }
 
 async function addEmployee() {
+  clear();
   const roles = await connection.query("SELECT * FROM role");
 
   const roleChoices = roles.map(({ id, title }) => ({
@@ -274,16 +280,34 @@ async function addEmployee() {
     });
 }
 
-function addRole() {
+async function addRole() {
+  clear();
+  const departments = await connection.query("SELECT * FROM department");
+
+  const departmentChoices = departments.map(({ id, department_name }) => ({
+    name: department_name,
+    value: id,
+  }));
+
   inquirer
     .prompt([
       {
         name: "title",
         message: "What's the name of the role you'd like to add?",
       },
+      {
+        name: "salary",
+        message: "What is the role's salary?",
+      },
+      {
+        type: "list",
+        name: "department_id",
+        message: "Which department is the role under?",
+        choices: departmentChoices,
+      },
     ])
-    .then((role) => {
-      return connection.query("INSERT INTO role SET ?", role);
+    .then((answer) => {
+      return connection.query("INSERT INTO role SET ?", answer);
     })
     .then(() => {
       return connection.query("SELECT * FROM role");
@@ -298,6 +322,7 @@ function addRole() {
 }
 
 function addDepartment() {
+  clear();
   inquirer
     .prompt({
       name: "department_name",
@@ -319,6 +344,7 @@ function addDepartment() {
 }
 
 async function removeEmployee() {
+  clear();
   const employees = await connection.query("SELECT * FROM employee");
 
   const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
@@ -356,6 +382,7 @@ async function removeEmployee() {
 }
 
 async function removeRole() {
+  clear();
   const roles = await connection.query("SELECT * FROM role");
 
   const roleChoices = roles.map(({ id, title }) => ({
@@ -391,6 +418,7 @@ async function removeRole() {
 }
 
 async function removeDepartment() {
+  clear();
   const departments = await connection.query("SELECT * FROM department");
 
   const departmentChoices = departments.map(({ id, department_name }) => ({
@@ -423,6 +451,7 @@ async function removeDepartment() {
 }
 
 async function updateEmployeeRole() {
+  clear();
   const employees = await connection.query("SELECT * FROM employee");
 
   const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
@@ -475,6 +504,7 @@ async function updateEmployeeRole() {
 }
 
 async function updateEmployeeManager() {
+  clear();
   const employees = await connection.query("SELECT * FROM employee");
 
   const employeeChoices = employees.map(({ id, first_name, last_name }) => ({
